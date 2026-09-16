@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Hindi to Santali Classroom Translator</title>
+<style>
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    max-width: 640px;
+    margin: 40px auto;
+    padding: 0 20px;
+    color: #1f2a24;
+    background: #fbfaf7;
+  }
+  h1 { font-size: 1.4rem; margin-bottom: 4px; }
+  p.sub { color: #5a6660; margin-top: 0; }
+  textarea {
+    width: 100%;
+    min-height: 90px;
+    font-size: 1.05rem;
+    padding: 10px;
+    border: 1px solid #c9d2cc;
+    border-radius: 6px;
+    box-sizing: border-box;
+  }
+  .row { display: flex; gap: 10px; margin-top: 10px; }
+  button {
+    padding: 10px 16px;
+    font-size: 0.95rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  #micBtn { background: #2f6b4f; color: white; }
+  #micBtn.listening { background: #b3462c; }
+  #translateBtn { background: #1f2a24; color: white; }
+  #worksheetBtn { background: #7a5c2e; color: white; }
+  /* NEW: speak button style */
+  #speakBtn { background: #2f6b4f; color: white; }
+  a { text-decoration: none; }
+  #output {
+    margin-top: 24px;
+    padding: 16px;
+    background: white;
+    border: 1px solid #c9d2cc;
+    border-radius: 6px;
+    min-height: 60px;
+    font-size: 1.2rem;
+  }
+  #status { color: #5a6660; font-size: 0.85rem; margin-top: 6px; }
+
+  #worksheet-picker-section {
+    margin-top: 20px;
+    padding: 16px;
+    background: white;
+    border: 1px solid #c9d2cc;
+    border-radius: 6px;
+  }
+  #topic-select {
+    width: 100%;
+    padding: 6px;
+    border: 1px solid #c9d2cc;
+    border-radius: 6px;
+    box-sizing: border-box;
+  }
+  #generateWorksheetBtn { background: #7a5c2e; color: white; margin-top: 10px; }
+
+  /* --- NEW: tab styles --- */
+  .tab-bar {
+    display: flex;
+    gap: 4px;
+    margin-top: 20px;
+    border-bottom: 2px solid #c9d2cc;
+  }
+  .tab-btn {
+    background: none;
+    color: #5a6660;
+    border: none;
+    padding: 10px 18px;
+    font-size: 1rem;
+    cursor: pointer;
+    border-radius: 6px 6px 0 0;
+    margin-bottom: -2px;
+  }
+  .tab-btn.active {
+    color: #1f2a24;
+    font-weight: 600;
+    background: white;
+    border: 2px solid #c9d2cc;
+    border-bottom: 2px solid white;
+  }
+  .tab-panel { display: none; padding-top: 20px; }
+  .tab-panel.active { display: block; }
+</style>
+</head>
+<body>
+
+  <h1>Hindi &rarr; Santali Classroom Translator</h1>
+  <p class="sub">Prototype — type or speak a Hindi sentence, get it in Santali.</p>
+
+  <!-- =========================================================
+       NEW: Tab bar to switch between Translate and Worksheet.
+       ========================================================= -->
+  <div class="tab-bar">
+    <button class="tab-btn active" id="tabBtnTranslate">Translate</button>
+    <button class="tab-btn" id="tabBtnWorksheet">Worksheet</button>
+  </div>
+
+  <!-- =========================================================
+       TRANSLATE TAB — all content here is exactly what was on
+       the page before, just moved inside this panel.
+       ========================================================= -->
+  <div class="tab-panel active" id="tabPanelTranslate">
+
+    <textarea id="hindiInput" placeholder="हिंदी में यहाँ लिखें..."></textarea>
+
+    <div class="row">
+      <button id="micBtn">🎤 Speak Hindi</button>
+      <button id="translateBtn">Translate</button>
+    </div>
+
+    <div id="status"></div>
+
+    <h3>Santali translation:</h3>
+    <div id="output">—</div>
+
+    <!-- NEW: speak-Santali-output button -->
+    <div class="row">
+      <button id="speakBtn">🔊 Listen (Santali)</button>
+    </div>
+
+    <h3>Word-by-word breakdown:</h3>
+    <div id="breakdown">—</div>
+
+    <h3>What kind of sentence is this?</h3>
+    <div id="explanation">—</div>
+
+  </div>
+
+  <!-- =========================================================
+       WORKSHEET TAB — the sample download button and the
+       topic-picker worksheet section both live here now.
+       ========================================================= -->
+  <div class="tab-panel" id="tabPanelWorksheet">
+
+    <div class="row">
+      <a href="/download-worksheet"><button id="worksheetBtn">📄 Download Sample Worksheet (PDF)</button></a>
+    </div>
+
+    <div id="worksheet-picker-section">
+      <h3>Generate Bilingual Worksheet by Topic</h3>
+      <p class="sub">Hold Ctrl (or Cmd on Mac) to select more than one topic.</p>
+      <select id="topic-select" multiple size="4"></select>
+      <div class="row">
+        <button id="generateWorksheetBtn">Generate Worksheet</button>
+      </div>
+      <div id="worksheetPickerStatus" style="color:#5a6660; font-size:0.85rem; margin-top:6px;"></div>
+    </div>
+
+  </div>
+
+<script>
+const hindiInput = document.getElementById("hindiInput");
+const translateBtn = document.getElementById("translateBtn");
+const micBtn = document.getElementById("micBtn");
+const output = document.getElementById("output");
+const breakdownDiv = document.getElementById("breakdown");
+const explanationDiv = document.getElementById("explanation");
+const status = document.getElementById("status");
+// NEW: speak button reference
+const speakBtn = document.getElementById("speakBtn");
+
+// NEW: speaks whatever is currently in the Santali output box.
+// Note: most browsers/OSes have no dedicated Santali voice, so this
+// uses the closest available voice to attempt pronunciation — it will
+// not sound like authentic native Santali speech.
+function speakSantali() {
+  const text = output.textContent.trim();
+  if (!text || text === "—" || text === "…") return;
+
+  window.speechSynthesis.cancel(); // stop any previous speech
+  const utterance = new SpeechSynthesisUtterance(text);
+
+  const voices = window.speechSynthesis.getVoices();
+  const preferred = voices.find(v => v.lang === "hi-IN") ||
+                     voices.find(v => v.lang.startsWith("hi")) ||
+                     voices.find(v => v.lang.startsWith("bn"));
+  if (preferred) utterance.voice = preferred;
+
+  utterance.rate = 0.9;
+  window.speechSynthesis.speak(utterance);
+}
+
+if (speakBtn) {
+  speakBtn.addEventListener("click", speakSantali);
+}
+
+// --- Sends whatever is in the text box to our Flask backend ---
+async function translateText() {
+  const text = hindiInput.value.trim();
+  if (!text) return;
+
+  status.textContent = "Translating...";
+  output.textContent = "…";
+
+  const response = await fetch("/translate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text: text })
+  });
+  const data = await response.json();
+
+  output.textContent = data.santali || "(no translation)";
+
+  // Build the word-by-word breakdown table
+  if (data.breakdown && data.breakdown.length > 0) {
+    let rows = data.breakdown.map(pair =>
+      `<div style="display:flex; gap:20px; padding:4px 0; border-bottom:1px solid #eee;">
+         <span style="width:120px;">${pair.hindi}</span>
+         <span>${pair.santali}</span>
+       </div>`
+    ).join("");
+    breakdownDiv.innerHTML = rows;
+  } else {
+    breakdownDiv.textContent = "—";
+  }
+
+  explanationDiv.textContent = data.explanation || "—";
+
+  status.textContent = "";
+
+  // NEW: auto-speak the Santali translation as soon as it arrives
+  speakSantali();
+}
+
+translateBtn.addEventListener("click", translateText);
+
+// --- Voice input using the browser's built-in speech recognition ---
+// This is free and built into Chrome. It listens in Hindi and
+// fills the text box with what it hears, then translates automatically.
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+if (SpeechRecognition) {
+  const recognizer = new SpeechRecognition();
+  recognizer.lang = "hi-IN";      // listen for Hindi speech
+  recognizer.interimResults = false;
+  let recognizerActive = false;   // NEW: tracks whether it's currently running
+
+  micBtn.addEventListener("click", () => {
+    if (recognizerActive) return;  // NEW: ignore clicks while already listening
+    micBtn.classList.add("listening");
+    status.textContent = "Listening... speak now.";
+    try {
+      recognizer.start();
+      recognizerActive = true;     // NEW
+    } catch (e) {
+      micBtn.classList.remove("listening");
+      status.textContent = "Mic already running — try again in a moment.";
+    }
+  });
+
+  recognizer.onresult = (event) => {
+    const heard = event.results[0][0].transcript;
+    hindiInput.value = heard;
+    translateText();
+  };
+
+  recognizer.onend = () => {
+    micBtn.classList.remove("listening");
+    recognizerActive = false;   // NEW
+  };
+
+  recognizer.onerror = () => {
+    micBtn.classList.remove("listening");
+    recognizerActive = false;   // NEW
+    status.textContent = "Didn't catch that — try again.";
+  };
+} else {
+  micBtn.disabled = true;
+  micBtn.title = "Voice input needs Chrome browser";
+}
+
+// =========================================================
+// Topic-picker worksheet logic (unchanged from before).
+// =========================================================
+const topicSelect = document.getElementById("topic-select");
+const generateWorksheetBtn = document.getElementById("generateWorksheetBtn");
+const worksheetPickerStatus = document.getElementById("worksheetPickerStatus");
+
+// Populate the dropdown with topics from the backend's topic bank
+fetch("/topics")
+  .then(res => res.json())
+  .then(topics => {
+    topics.forEach(t => {
+      const option = document.createElement("option");
+      option.value = t.key;
+      option.textContent = t.title;
+      topicSelect.appendChild(option);
+    });
+  })
+  .catch(() => {
+    worksheetPickerStatus.textContent = "Could not load topic list.";
+  });
+
+// Send the selected topics and download the resulting PDF
+generateWorksheetBtn.addEventListener("click", () => {
+  const selected = Array.from(topicSelect.selectedOptions).map(o => o.value);
+
+  if (selected.length === 0) {
+    worksheetPickerStatus.textContent = "Please select at least one topic.";
+    return;
+  }
+
+  worksheetPickerStatus.textContent = "Generating worksheet...";
+
+  fetch("/generate-worksheet", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ topics: selected })
+  })
+    .then(res => res.blob())
+    .then(blob => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "worksheet.pdf";
+      a.click();
+      worksheetPickerStatus.textContent = "";
+    })
+    .catch(() => {
+      worksheetPickerStatus.textContent = "Something went wrong generating the worksheet.";
+    });
+});
+
+// =========================================================
+// NEW: tab switching logic.
+// =========================================================
+const tabBtnTranslate = document.getElementById("tabBtnTranslate");
+const tabBtnWorksheet = document.getElementById("tabBtnWorksheet");
+const tabPanelTranslate = document.getElementById("tabPanelTranslate");
+const tabPanelWorksheet = document.getElementById("tabPanelWorksheet");
+
+function showTab(tab) {
+  const isTranslate = tab === "translate";
+  tabBtnTranslate.classList.toggle("active", isTranslate);
+  tabBtnWorksheet.classList.toggle("active", !isTranslate);
+  tabPanelTranslate.classList.toggle("active", isTranslate);
+  tabPanelWorksheet.classList.toggle("active", !isTranslate);
+}
+
+tabBtnTranslate.addEventListener("click", () => showTab("translate"));
+tabBtnWorksheet.addEventListener("click", () => showTab("worksheet"));
+</script>
+
+</body>
+</html>

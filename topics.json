@@ -1,0 +1,22 @@
+{
+  "numbers": {
+    "title": "गिनती (Numbers)",
+    "instruction": "Have students count aloud with the teacher, pointing to objects as they count.",
+    "items": ["एक", "दो", "तीन", "चार", "पांच", "छह", "सात", "आठ", "नौ", "दस"]
+  },
+  "greetings": {
+    "title": "अभिवादन (Greetings)",
+    "instruction": "Practice these greetings in pairs, taking turns.",
+    "items": ["नमस्ते", "धन्यवाद", "कृपया", "शुभ प्रभात", "फिर मिलेंगे"]
+  },
+  "objects": {
+    "title": "वस्तुएं (Common Objects)",
+    "instruction": "Point to each object in the classroom as you say its name.",
+    "items": ["किताब", "पेंसिल", "कुर्सी", "मेज", "बैग"]
+  },
+  "animals": {
+    "title": "जानवर (Animals)",
+    "instruction": "Show pictures of each animal and have students repeat the name.",
+    "items": ["गाय", "बिल्ली", "कुत्ता", "हाथी", "बकरी"]
+  }
+}
