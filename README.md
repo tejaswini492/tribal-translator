@@ -1,3 +1,6 @@
+prototype link
+https://tribal-translator.onrender.com/
+
 # Hindi → Santali Classroom Translator (Prototype)
 
 Uses Meta's already-trained NLLB-200 translation model — no training required.
