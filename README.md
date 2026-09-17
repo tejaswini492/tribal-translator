@@ -11,6 +11,13 @@ Uses Meta's already-trained NLLB-200 translation model — no training required.
 - `templates/index.html` — the webpage: type or speak Hindi, see Santali on screen
 - `requirements.txt` — list of Python packages this needs
 
+- demo woking instances
+- <img width="1056" height="752" alt="image" src="https://github.com/user-attachments/assets/97f227b3-225c-4eb5-905d-5e1e05ad95da" />
+<img width="1032" height="748" alt="image" src="https://github.com/user-attachments/assets/64db1029-0bee-468c-9d64-823c226c6f35" />
+<img width="1600" height="900" alt="image" src="https://github.com/user-attachments/assets/cd4eb6ff-63e0-41e8-9f19-15bf9e2e3322" />
+
+
+
 ## Step-by-step setup
 
 ### 1. Install Python (if you don't have it)
