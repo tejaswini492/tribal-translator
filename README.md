@@ -75,4 +75,3 @@ Go to: `http://127.0.0.1:5000`
 - Click "🎤 Speak Hindi" (Chrome only) and say a sentence — it fills in and translates automatically.
 
 
-<img width="1920" height="1080" alt="Screenshot (61)" src="https://github.com/user-attachments/assets/d2044de4-f433-4438-b0cd-28752de5531f" />
